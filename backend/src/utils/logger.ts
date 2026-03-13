@@ -5,3 +5,7 @@ export function logInfo(message: string) {
 export function logError(message: string, error?: unknown) {
   console.error(`[ERROR] ${message}`, error)
 }
+
+export function logWarning(message: string) {
+  console.warn(`[WARNING] ${message}`)
+}
