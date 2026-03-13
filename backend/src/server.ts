@@ -7,12 +7,22 @@ const fastify = Fastify({ logger: true })
 fastify.register(multipart)
 fastify.register(cors)
 
-fastify.get("/", async () => {
-  return { hello: "world" }
+fastify.get("/health", async (req, res) => {
+  return {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    service: "freight-document-intelligence",
+  }
 })
 
 const start = async () => {
-  await fastify.listen({ port: 4000 })
+  try {
+    await fastify.listen({ port: 4000, host: "0.0.0.0" })
+    console.log(`Server is running on port 4000`)
+  } catch (err) {
+    fastify.log.error(err)
+    process.exit(1)
+  }
 }
 
 start()
