@@ -7,11 +7,15 @@ import { env } from "./config/env"
 
 const fastify = Fastify({ logger: true })
 
-fastify.register(multipart)
 fastify.register(cors)
 
 const start = async () => {
   try {
+    await fastify.register(multipart, {
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+      },
+    })
     await registerRoutes(fastify)
     await fastify.listen({ port: env.PORT, host: "0.0.0.0" })
     logInfo(`Server is running on port ${env.PORT}`)
