@@ -4,6 +4,7 @@ import { extractTextFromPdf } from "../utils/pdfTextExtractor"
 import { normalizeText } from "../utils/textNormalizer"
 import { generateDocumentFingerprint } from "../utils/fingerprint"
 import { convertPdfToImages } from "../utils/pdfToImage"
+import { extractStructuredData } from "../ai/extractionService"
 
 export interface ProcessDocumentInput {
   fileBuffer: Buffer
@@ -42,9 +43,15 @@ export async function processDocument(
   logInfo(`Document fingerprint: ${fingerprint}`)
 
   /** Future Pipeline Implementation */
+  let structuredData = null
+  if (normalizedText && normalizedText.length > 50) {
+    logInfo("Running Claude extraction")
+    structuredData = await extractStructuredData(normalizedText)
+  }
+
   return {
     extractedText: normalizedText,
     fingerprint,
-    structuredData: null,
+    structuredData,
   }
 }
