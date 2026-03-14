@@ -5,6 +5,10 @@ import { normalizeText } from "../utils/textNormalizer"
 import { generateDocumentFingerprint } from "../utils/fingerprint"
 import { convertPdfToImages } from "../utils/pdfToImage"
 import { extractStructuredData } from "../ai/extractionService"
+import {
+  createDocument,
+  saveExtractedFields,
+} from "../repositories/documentRepository"
 
 export interface ProcessDocumentInput {
   fileBuffer: Buffer
@@ -47,6 +51,18 @@ export async function processDocument(
   if (normalizedText && normalizedText.length > 50) {
     logInfo("Running Claude extraction")
     structuredData = await extractStructuredData(normalizedText)
+  }
+
+  const orgId = "demo-org-1"
+  const document = await createDocument({
+    orgId,
+    fileName: input.fileName,
+    filePath: input.filePath ?? "",
+    fingerprint,
+  })
+
+  if (structuredData) {
+    await saveExtractedFields(document.id, structuredData)
   }
 
   return {

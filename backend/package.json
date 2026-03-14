@@ -13,6 +13,7 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "prisma": "^7.5.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
@@ -20,6 +21,7 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@fastify/cors": "^11.2.0",
     "@fastify/multipart": "^9.4.0",
+    "@prisma/client": "^7.5.0",
     "canvas": "^3.2.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",

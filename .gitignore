@@ -1,4 +1,33 @@
+# Dependencies
 node_modules
+
+# Environment & secrets
 .env
 .env.local
+.env.*.local
+
+# Build outputs
 dist
+build
+*.tsbuildinfo
+
+# Backend - generated code (Prisma)
+backend/src/generated/
+
+# Backend - temporary uploads & processing
+backend/tmp/
+
+# Backend - Tesseract OCR trained data (large binary)
+backend/*.traineddata
+
+# Frontend (Next.js)
+.next
+out
+
+# Logs & OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/

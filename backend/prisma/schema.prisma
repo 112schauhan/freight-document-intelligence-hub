@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id        String     @id @default(uuid())
+  name      String
+  createdAt DateTime   @default(now())
+
+  documents Document[]
+}
+
+model Document {
+  id              String   @id @default(uuid())
+  orgId           String
+  fileName        String
+  filePath        String
+  fingerprint     String
+  documentType    String?
+  uploadTimestamp DateTime @default(now())
+
+  organization Organization @relation(fields: [orgId], references: [id])
+  fields        DocumentField[]
+  corrections   CorrectionHistory[]
+}
+
+model DocumentField {
+  id            String   @id @default(uuid())
+  documentId    String
+  fieldName     String
+  aiValue       String?
+  correctedValue String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id])
+}
+
+model CorrectionHistory {
+  id            String   @id @default(uuid())
+  documentId    String
+  fieldName     String
+  aiValue       String?
+  correctedValue String?
+
+  correctedAt DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id])
+}
