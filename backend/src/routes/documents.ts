@@ -6,6 +6,7 @@ import { env } from "../config/env"
 import { logError } from "../utils/logger"
 import {
   createDocumentWithFieldsAndCorrections,
+  findDocumentByFingerprint,
   findDocumentById,
   findDocumentsWithFilters,
   type FieldValues,
@@ -176,6 +177,15 @@ export default async function documentsRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({
           error: "Pending upload not found",
           uploadId,
+        })
+      }
+
+      const existing = await findDocumentByFingerprint(DEMO_ORG_ID, fingerprint)
+      if (existing) {
+        return reply.status(409).send({
+          error: "Duplicate document",
+          existingDocumentId: existing.id,
+          existingFileName: existing.fileName,
         })
       }
 

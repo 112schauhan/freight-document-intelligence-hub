@@ -156,6 +156,18 @@ export async function findDocumentById(id: string) {
   })
 }
 
+/** Find an existing document with the same content fingerprint (same org). Used for duplicate detection. */
+export async function findDocumentByFingerprint(
+  orgId: string,
+  fingerprint: string,
+): Promise<{ id: string; fileName: string } | null> {
+  const doc = await prisma.document.findFirst({
+    where: { orgId, fingerprint },
+    select: { id: true, fileName: true },
+  })
+  return doc
+}
+
 export async function createDocument(data: {
   orgId: string
   fileName: string

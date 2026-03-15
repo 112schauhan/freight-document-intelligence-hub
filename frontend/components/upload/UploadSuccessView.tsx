@@ -11,9 +11,29 @@ interface UploadSuccessViewProps {
 export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessViewProps) {
   return (
     <div className="space-y-6 rounded-xl border border-zinc-200 dark:border-zinc-700 p-6 sm:p-8 bg-zinc-50/50 dark:bg-zinc-800/30">
-      <p className="text-green-600 dark:text-green-400 font-medium">
-        Upload successful. Extraction complete.
-      </p>
+      {result.duplicateOf ? (
+        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
+          <p className="text-amber-800 dark:text-amber-200 font-medium">
+            This document appears to be a duplicate of one already in the system.
+          </p>
+          <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+            Existing: {result.duplicateOf.fileName}
+          </p>
+          <Link
+            href={`/documents/${result.duplicateOf.id}`}
+            className="inline-block mt-2 text-sm font-medium text-amber-800 dark:text-amber-200 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded"
+          >
+            View existing document →
+          </Link>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+            If you approve below, it will be rejected as a duplicate.
+          </p>
+        </div>
+      ) : (
+        <p className="text-green-600 dark:text-green-400 font-medium">
+          Upload successful. Extraction complete.
+        </p>
+      )}
       <dl className="grid gap-2 text-sm">
         <div>
           <dt className="text-zinc-500 dark:text-zinc-400">File</dt>

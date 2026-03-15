@@ -17,6 +17,8 @@ export interface UploadResponse {
   documentType: string | null
   extraction: FieldValues | null
   fingerprint?: string
+  /** Set when this upload matches an existing document by content fingerprint. */
+  duplicateOf?: { id: string; fileName: string }
 }
 
 export interface ApproveResponse {
@@ -101,8 +103,12 @@ export async function approveDocument(body: {
     body: JSON.stringify(body),
   })
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error((err as { error?: string }).error ?? `Approve failed: ${res.status}`)
+    const err = await res.json().catch(() => ({})) as { error?: string; existingDocumentId?: string }
+    const e = new Error(err.error ?? `Approve failed: ${res.status}`)
+    if (res.status === 409 && err.existingDocumentId) {
+      (e as Error & { existingDocumentId: string }).existingDocumentId = err.existingDocumentId
+    }
+    throw e
   }
   return res.json() as Promise<ApproveResponse>
 }

@@ -1,11 +1,14 @@
 import type { FastifyInstance } from "fastify"
 import { processDocumentExtractionOnly } from "../services/documentProcessor"
+import { findDocumentByFingerprint } from "../repositories/documentRepository"
 import { logError } from "../utils/logger"
 import path from "path"
 import fs from "fs"
 import { pipeline } from "stream/promises"
 import { randomUUID } from "crypto"
 import { env } from "../config/env"
+
+const DEMO_ORG_ID = "demo-org-1"
 
 /** Infer document type from filename (e.g. commercial invoice, packing list, bill of lading). */
 function inferDocumentTypeFromFileName(fileName: string): string | null {
@@ -105,12 +108,18 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
 
       const documentType = inferDocumentType(file.filename, result.structuredData ?? null)
 
+      const duplicateOf =
+        result.fingerprint != null
+          ? await findDocumentByFingerprint(DEMO_ORG_ID, result.fingerprint)
+          : null
+
       return reply.send({
         uploadId,
         fileName: file.filename,
         documentType,
         extraction: result.structuredData ?? null,
         fingerprint: result.fingerprint ?? undefined,
+        ...(duplicateOf && { duplicateOf: { id: duplicateOf.id, fileName: duplicateOf.fileName } }),
       })
     } catch (error) {
       logError("Upload processing failed", error)

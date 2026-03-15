@@ -14,6 +14,7 @@ export default function UploadReviewPage() {
   const [formValues, setFormValues] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [duplicateDocumentId, setDuplicateDocumentId] = useState<string | null>(null)
 
   useEffect(() => {
     const raw =
@@ -66,6 +67,7 @@ export default function UploadReviewPage() {
     }
     setLoading(true)
     setError(null)
+    setDuplicateDocumentId(null)
     try {
       const correctedFields = getCorrectedFields()
       const { documentId } = await approveDocument({
@@ -81,7 +83,12 @@ export default function UploadReviewPage() {
       }
       router.push(`/documents/${documentId}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Approve failed.")
+      const msg = err instanceof Error ? err.message : "Approve failed."
+      setError(msg)
+      const existingId = err instanceof Error && "existingDocumentId" in err
+        ? (err as Error & { existingDocumentId: string }).existingDocumentId
+        : null
+      setDuplicateDocumentId(existingId ?? null)
     } finally {
       setLoading(false)
     }
@@ -127,12 +134,25 @@ export default function UploadReviewPage() {
       </div>
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-6 sm:p-8 bg-zinc-50/50 dark:bg-zinc-800/30">
+        {error && (
+          <div className="mb-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
+            <p className="text-red-800 dark:text-red-200">{error}</p>
+            {duplicateDocumentId && (
+              <Link
+                href={`/documents/${duplicateDocumentId}`}
+                className="inline-block mt-2 text-sm font-medium text-red-800 dark:text-red-200 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
+              >
+                View existing document →
+              </Link>
+            )}
+          </div>
+        )}
         <ExtractionForm
           values={formValues}
           onFieldChange={setField}
           onSubmit={handleApprove}
           loading={loading}
-          error={error}
+          error={null}
           submitLabel="Approve"
           cancelHref="/upload"
           cancelLabel="Cancel"
