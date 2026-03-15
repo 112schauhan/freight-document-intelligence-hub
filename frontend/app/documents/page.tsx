@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { getDocuments } from "@/lib/api";
 import type { DocumentListItem, ListDocumentsParams } from "@/lib/api";
+import { documentsToCsv, downloadCsv } from "@/lib/csvExport";
 
 const DEBOUNCE_MS = 300;
 
@@ -78,6 +79,12 @@ export default function DocumentsPage() {
     setError(null);
   }, []);
 
+  const handleExportCsv = useCallback(() => {
+    const csv = documentsToCsv(documents);
+    const filename = `documents-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    downloadCsv(csv, filename);
+  }, [documents]);
+
   const inputFocusClass =
     "focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2";
 
@@ -87,12 +94,23 @@ export default function DocumentsPage() {
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           Documents
         </h1>
-        <Link
-          href="/upload"
-          className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 shrink-0"
-        >
-          Upload document
-        </Link>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={documents.length === 0}
+            className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
+            title="Export current list to CSV"
+          >
+            Export CSV
+          </button>
+          <Link
+            href="/upload"
+            className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
+          >
+            Upload document
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-4 rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 sm:p-6 bg-zinc-50/50 dark:bg-zinc-800/30">
