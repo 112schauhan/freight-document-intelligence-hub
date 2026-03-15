@@ -23,14 +23,42 @@ export interface ProcessDocumentResult {
   fingerprint?: string
 }
 
-export async function processDocument(
+/** Result of extraction-only pipeline (no DB writes). */
+export interface ExtractionOnlyResult {
+  extractedText?: string
+  structuredData?: Record<string, string | null> | null
+  fingerprint?: string
+}
+
+/**
+ * Runs OCR + Claude extraction only. Does not create Document or DocumentField rows.
+ * Used by the upload route for human-in-the-loop: return extraction to client, save to DB only on approve.
+ */
+export async function processDocumentExtractionOnly(
   input: ProcessDocumentInput,
-): Promise<ProcessDocumentResult> {
-  /** Future Pipeline Implementation */
+): Promise<ExtractionOnlyResult> {
+  const { normalizedText, fingerprint, structuredData } =
+    await runExtractionPipeline(input)
+  return {
+    extractedText: normalizedText,
+    structuredData: structuredData ?? null,
+    fingerprint,
+  }
+}
+
+/**
+ * Shared pipeline: OCR (or PDF text) + normalize + fingerprint + Claude extraction.
+ * No side effects (no DB writes).
+ */
+async function runExtractionPipeline(input: ProcessDocumentInput): Promise<{
+  normalizedText: string
+  fingerprint: string
+  structuredData: Record<string, string | null> | null
+}> {
   logInfo(`Processing document: ${input.fileName}`)
 
   let extractedText = ""
-  if (input.mimeType == "application/pdf") {
+  if (input.mimeType === "application/pdf") {
     logInfo("Running pdf to text extraction")
     extractedText = await extractTextFromPdf(input.fileBuffer)
   }
@@ -43,15 +71,22 @@ export async function processDocument(
 
   const normalizedText = normalizeText(extractedText)
   const fingerprint = generateDocumentFingerprint(normalizedText)
-
   logInfo(`Document fingerprint: ${fingerprint}`)
 
-  /** Future Pipeline Implementation */
-  let structuredData = null
+  let structuredData: Record<string, string | null> | null = null
   if (normalizedText && normalizedText.length > 50) {
     logInfo("Running Claude extraction")
     structuredData = await extractStructuredData(normalizedText)
   }
+
+  return { normalizedText, fingerprint, structuredData }
+}
+
+export async function processDocument(
+  input: ProcessDocumentInput,
+): Promise<ProcessDocumentResult> {
+  const { normalizedText, fingerprint, structuredData } =
+    await runExtractionPipeline(input)
 
   const orgId = "demo-org-1"
   const document = await createDocument({

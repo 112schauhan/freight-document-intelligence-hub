@@ -21,11 +21,13 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@fastify/cors": "^11.2.0",
     "@fastify/multipart": "^9.4.0",
+    "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "canvas": "^3.2.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "fastify": "^5.8.2",
+    "pg": "^8.20.0",
     "tesseract.js": "^7.0.0",
     "zod": "^4.3.6"
   }
