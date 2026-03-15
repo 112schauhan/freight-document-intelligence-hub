@@ -29,4 +29,5 @@ ENV PORT=4000
 EXPOSE 4000
 
 # Migrations and seed (idempotent), then start server. Set DATABASE_URL at runtime.
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run db:seed && exec tsx src/server.ts"]
+# If seed fails (e.g. permissions), still start so the app is usable; seed can be run manually.
+CMD ["sh", "-c", "npx prisma migrate deploy && (npm run db:seed || true) && exec tsx src/server.ts"]

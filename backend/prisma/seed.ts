@@ -1,11 +1,12 @@
 import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { env } from "../src/config/env"
 
 const DEMO_ORG_ID = "demo-org-1"
 
 async function main() {
-  const connectionString = process.env.DATABASE_URL
+  const connectionString = env.DATABASE_URL
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set. Cannot run seed.")
   }
