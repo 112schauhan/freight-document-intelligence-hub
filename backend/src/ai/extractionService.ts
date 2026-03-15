@@ -3,22 +3,27 @@ import { anthropic } from "./anthropicClient"
 import { buildExtractionPrompt } from "./extractionPrompt"
 import { z } from "zod"
 
+const stringOrNull = z
+  .string()
+  .nullable()
+  .transform((v) => (v === "" || v == null ? null : v))
+
 const extractionSchema = z.object({
-  shipper_name: z.string().nullable(),
-  shipper_address: z.string().nullable(),
-  consignee_name: z.string().nullable(),
-  consignee_address: z.string().nullable(),
-  commodity_description: z.string().nullable(),
-  quantity: z.string().nullable(),
-  unit: z.string().nullable(),
-  gross_weight: z.string().nullable(),
-  net_weight: z.string().nullable(),
-  country_of_origin: z.string().nullable(),
-  invoice_value: z.string().nullable(),
-  currency: z.string().nullable(),
-  incoterms: z.string().nullable(),
-  document_date: z.string().nullable(),
-  reference_number: z.string().nullable(),
+  shipper_name: stringOrNull,
+  shipper_address: stringOrNull,
+  consignee_name: stringOrNull,
+  consignee_address: stringOrNull,
+  commodity_description: stringOrNull,
+  quantity: stringOrNull,
+  unit: stringOrNull,
+  gross_weight: stringOrNull,
+  net_weight: stringOrNull,
+  country_of_origin: stringOrNull,
+  invoice_value: stringOrNull,
+  currency: stringOrNull,
+  incoterms: stringOrNull,
+  document_date: stringOrNull,
+  reference_number: stringOrNull,
 })
 
 export async function extractStructuredData(documentText: string) {
