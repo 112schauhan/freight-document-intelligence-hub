@@ -4,6 +4,7 @@ import { logError } from "../utils/logger"
 import path from "path"
 import fs from "fs"
 import { pipeline } from "stream/promises"
+import { env } from "../config/env"
 
 export default async function uploadRoutes(fastify: FastifyInstance) {
   fastify.post("/upload", async (request, reply) => {
@@ -31,9 +32,10 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
         })
       }
 
-      /**To ensure the upload directory exists */
-
-      const uploadDir = path.join(process.cwd(), "tmp")
+      /** Use configured pending upload dir (for two-phase flow: persist here until approve) */
+      const uploadDir = path.isAbsolute(env.PENDING_UPLOAD_DIR)
+        ? env.PENDING_UPLOAD_DIR
+        : path.join(process.cwd(), env.PENDING_UPLOAD_DIR)
       await fs.promises.mkdir(uploadDir, { recursive: true })
       /** Create file path */
       const uniqueName = `${Date.now()}-${file.filename}`
