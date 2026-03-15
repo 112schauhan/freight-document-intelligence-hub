@@ -6,6 +6,7 @@ import { env } from "../config/env"
 import { logError } from "../utils/logger"
 import {
   createDocumentWithFieldsAndCorrections,
+  findDocumentById,
   findDocumentsWithFilters,
   type FieldValues,
 } from "../repositories/documentRepository"
@@ -50,6 +51,17 @@ function getFieldDisplayValue(fields: DocumentField[], fieldName: string): strin
   return (f.correctedValue ?? f.aiValue) ?? null
 }
 
+/** Resolve file path and ensure it is under the upload dir (safe for streaming). */
+function resolveSafeFilePath(filePath: string): string | null {
+  const uploadDir = getUploadDir()
+  const resolvedUpload = path.resolve(uploadDir)
+  const resolvedFile = path.isAbsolute(filePath)
+    ? path.normalize(filePath)
+    : path.normalize(path.join(process.cwd(), filePath))
+  if (!resolvedFile.startsWith(resolvedUpload)) return null
+  return resolvedFile
+}
+
 interface ListQuery {
   q?: string
   documentType?: string
@@ -85,6 +97,58 @@ export default async function documentsRoutes(fastify: FastifyInstance) {
     } catch (error) {
       logError("List documents failed", error)
       return reply.status(500).send({ error: "Failed to list documents" })
+    }
+  })
+
+  fastify.get<{ Params: { id: string } }>("/documents/:id/file", async (request, reply) => {
+    try {
+      const { id } = request.params
+      const doc = await findDocumentById(id)
+      if (!doc) {
+        return reply.status(404).send({ error: "Document not found", id })
+      }
+      const safePath = resolveSafeFilePath(doc.filePath)
+      if (!safePath || !fs.existsSync(safePath)) {
+        return reply.status(404).send({ error: "File not found", id })
+      }
+      const stream = fs.createReadStream(safePath)
+      return reply
+        .header("Content-Disposition", `attachment; filename="${doc.fileName}"`)
+        .send(stream)
+    } catch (error) {
+      logError("Get document file failed", error)
+      return reply.status(500).send({ error: "Failed to get document file" })
+    }
+  })
+
+  fastify.get<{ Params: { id: string } }>("/documents/:id", async (request, reply) => {
+    try {
+      const { id } = request.params
+      const doc = await findDocumentById(id)
+      if (!doc) {
+        return reply.status(404).send({ error: "Document not found", id })
+      }
+      return reply.send({
+        id: doc.id,
+        fileName: doc.fileName,
+        documentType: doc.documentType,
+        uploadTimestamp: doc.uploadTimestamp.toISOString(),
+        fingerprint: doc.fingerprint,
+        fields: doc.fields.map((f) => ({
+          fieldName: f.fieldName,
+          aiValue: f.aiValue,
+          correctedValue: f.correctedValue,
+        })),
+        correctionHistory: doc.corrections.map((c) => ({
+          fieldName: c.fieldName,
+          aiValue: c.aiValue,
+          correctedValue: c.correctedValue,
+          correctedAt: c.correctedAt.toISOString(),
+        })),
+      })
+    } catch (error) {
+      logError("Get document failed", error)
+      return reply.status(500).send({ error: "Failed to get document" })
     }
   })
 

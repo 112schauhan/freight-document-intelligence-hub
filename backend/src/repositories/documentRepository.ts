@@ -143,6 +143,16 @@ export async function findDocumentsWithFilters(filters: ListDocumentsFilters) {
   })
 }
 
+export async function findDocumentById(id: string) {
+  return prisma.document.findUnique({
+    where: { id },
+    include: {
+      fields: true,
+      corrections: { orderBy: { correctedAt: "asc" } },
+    },
+  })
+}
+
 export async function createDocument(data: {
   orgId: string
   fileName: string
