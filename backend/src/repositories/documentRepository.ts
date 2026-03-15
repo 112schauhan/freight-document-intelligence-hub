@@ -29,7 +29,8 @@ export type FieldValues = Record<string, string | null>
 /**
  * Creates a document with all extracted fields and correction history in a single transaction.
  * Use when the user has approved (and optionally corrected) the extraction from the upload flow.
- * - DocumentField: aiValue from extraction, correctedValue from correctedFields (or extraction if unchanged).
+ * - DocumentField: aiValue from extraction; correctedValue only when the client sent a value for that field in correctedFields (otherwise null).
+ *   Display value is correctedValue ?? aiValue.
  * - CorrectionHistory: one row per field where the user changed the value (correctedValue !== aiValue).
  */
 export async function createDocumentWithFieldsAndCorrections(
@@ -46,12 +47,14 @@ export async function createDocumentWithFieldsAndCorrections(
 
   const documentFieldsData = Array.from(fieldNames).map((fieldName) => {
     const aiValue = extractionResult[fieldName] ?? null
-    const correctedValue = correctedFields[fieldName] ?? extractionResult[fieldName] ?? null
+    const rawCorrected = correctedFields[fieldName]
+    const correctedValue =
+      rawCorrected !== undefined && rawCorrected !== null ? String(rawCorrected) : null
     return {
       documentId,
       fieldName,
       aiValue: aiValue != null ? String(aiValue) : null,
-      correctedValue: correctedValue != null ? String(correctedValue) : null,
+      correctedValue,
     }
   })
 
