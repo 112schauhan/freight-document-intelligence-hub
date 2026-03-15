@@ -1,91 +1,34 @@
 # Freight Document Intelligence Hub
 
-Upload logistics documents (invoices, packing lists, bills of lading), review AI-extracted data, and manage your freight documents with search, filters, and correction history.
+A web application where users upload logistics documents (commercial invoice, packing list, or bill of lading). AI extracts structured data; results are shown in an editable form for human-in-the-loop review, then stored and made searchable in a dashboard.
 
-## Tech stack
+## Setup instructions
 
-- **Backend:** Node.js, Fastify, Prisma 7, PostgreSQL, Anthropic Claude, Tesseract.js, Poppler (pdftotext / pdftoppm)
-- **Frontend:** Next.js 16, TypeScript, Tailwind CSS
-- **Database:** PostgreSQL (e.g. database name: `freight-ai`)
+**Prerequisites:** Node.js (v18+), PostgreSQL, Poppler on PATH (`pdftotext`, `pdftoppm`).
 
-## Prerequisites
+**Backend** (`backend/.env` — copy from `backend/.env.example`): `PORT`, `ANTHROPIC_API_KEY`, `DATABASE_URL`, optional `UPLOAD_DIR` / `PENDING_UPLOAD_DIR`.
 
-- Node.js (v18+)
-- PostgreSQL
-- Poppler utils (`pdftotext`, `pdftoppm`) on PATH for PDF text extraction and PDF-to-image (OCR fallback)
+**Frontend** (`frontend/.env.local` — copy from `frontend/.env.example`): `NEXT_PUBLIC_API_URL` (backend base URL).
 
-## Environment variables
+1. Create a PostgreSQL database (e.g. `freight_ai`). From `backend/`: `npm install`, `npx prisma migrate deploy`, `npm run db:seed`.
+2. Backend: `cd backend && npm run dev` (API at `http://localhost:4000`).
+3. Frontend: `cd frontend && npm install && npm run dev` (app at `http://localhost:3000`).
 
-### Backend (`backend/.env`)
+To run the backend in Docker (Poppler included): from `backend/`, `docker compose up --build`. Use `host.docker.internal` instead of `localhost` in `DATABASE_URL` if PostgreSQL runs on the host.
 
-Copy from `backend/.env.example`:
+## Architecture decisions
 
-| Variable | Description |
-|----------|-------------|
-| `PORT` | Server port (default `4000`) |
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude extraction |
-| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://user:password@localhost:5432/freight-ai`) |
-| `UPLOAD_DIR` | Directory for approved document files (default `uploads`) |
-| `PENDING_UPLOAD_DIR` | Directory for pending uploads before approval (default `uploads/pending`) |
+- **Two-phase upload and human-in-the-loop:** Upload runs OCR and Claude extraction and returns extraction results; the document is not saved until the user reviews the editable form and clicks Approve. Approve moves the file from pending to final storage and creates the document, fields, and correction history.
+- **Structured extraction and storage:** Extracted text is sent to Claude; structured fields are returned and stored relationally (per-field rows), not as a JSON blob. Only changed fields are sent as `correctedFields` and written to a correction-history table for an audit trail.
+- **OCR pipeline:** PDFs use `pdftotext` first; if too little text is found, pages are converted via `pdftoppm` and sent to Tesseract. Images (PNG/JPEG) go directly to Tesseract.
+- **Data model:** Organizations (with `org_id`) → Documents (file reference, upload timestamp, document type) → DocumentFields (`aiValue`, `correctedValue`) and CorrectionHistory. This supports the audit trail and multi-tenant context.
 
-### Frontend (`frontend/.env.local`)
+## Bonus feature: Export to CSV
 
-Copy from `frontend/.env.example`:
+The Documents dashboard has an **Export CSV** button that downloads the current filtered list as a CSV. Logistics and customs teams often need to share document summaries in spreadsheets or feed them into other systems; this avoids manual copy-paste and respects the active search and filters.
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL (e.g. `http://localhost:4000`) |
+## Tradeoffs
 
-## How to run
-
-1. **Database:** Create a PostgreSQL database (e.g. `freight-ai`) and run migrations and seed from the backend:
-
-   ```bash
-   cd backend
-   npm install
-   npx prisma migrate deploy
-   npm run db:seed
-   ```
-
-2. **Backend:**
-
-   ```bash
-   cd backend
-   npm run dev
-   ```
-
-   API runs at `http://localhost:4000` (or your `PORT`).
-
-3. **Frontend:**
-
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-   App runs at [http://localhost:3000](http://localhost:3000). Set `NEXT_PUBLIC_API_URL` in `frontend/.env.local` to your backend URL.
-
-## Architecture
-
-- **Two-phase upload:** Upload sends the file to the backend; the backend runs OCR + Claude extraction and returns `uploadId`, `extraction`, etc. **No** document is saved to the DB until the user reviews and clicks **Approve** on the frontend. Approve moves the file from pending storage to final storage and creates `Document`, `DocumentField`, and `CorrectionHistory` records.
-- **OCR:** PDFs use `pdftotext` first; if too little text is found, pages are converted to images via `pdftoppm` and sent to Tesseract. Images (PNG/JPEG) go straight to Tesseract.
-- **Extraction:** Extracted text is sent to Claude; structured fields (shipper, consignee, commodity, etc.) are returned and stored per document. Users can correct values; only changed fields are sent as `correctedFields` and recorded in `CorrectionHistory`.
-- **Data model:** Organizations → Documents (with `fileName`, `filePath`, `fingerprint`, `documentType`) → DocumentFields (`aiValue`, `correctedValue`) and CorrectionHistory for audit.
-
-## Bonus feature: Export to CSV (Deliverable 4)
-
-The **Documents** dashboard includes an **Export CSV** button that downloads the current filtered list as a CSV file. Logistics and customs teams often need to share document summaries in spreadsheets (Excel, Google Sheets) or feed them into other systems; exporting the list with document type, file name, upload date, shipper, consignee, commodity, and reference number in one click avoids manual copy-paste and respects the active search and filters.
-
-## Tradeoffs / notes
-
-- **PDF handling:** The backend uses Poppler (`pdftotext`, `pdftoppm`) for PDF text extraction and page-to-image conversion; these must be installed on the host. Alternative pure-JS PDF rendering exists in the codebase but is not used in the main pipeline.
-- **Demo org:** The app uses a fixed demo organization ID (`demo-org-1`); the seed ensures this org exists. Multi-tenant org selection can be added later.
-
-## Project structure
-
-```
-backend/          # Fastify API, Prisma, OCR, Claude extraction
-frontend/         # Next.js app (upload, review, documents list/detail)
-docs/             # Backend and frontend commit/verification notes
-```
+- **PDF handling:** Poppler (`pdftotext`, `pdftoppm`) is used for PDF text and page-to-image; it must be on the host or use the backend Docker image. A pure-JS PDF path exists in the codebase but is not used in the main pipeline for consistency.
+- **Demo org:** A fixed demo organization ID is used; schema and APIs include `org_id` so multi-tenant use can be added later.
+- **CORS:** The backend allows all origins by default; in production this would be restricted to the frontend origin.

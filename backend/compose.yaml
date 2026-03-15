@@ -1,0 +1,11 @@
+# Backend only. Run from backend/: docker compose up --build
+# Requires .env in this directory (DATABASE_URL, ANTHROPIC_API_KEY).
+services:
+  backend:
+    build: .
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      - PORT=4000
