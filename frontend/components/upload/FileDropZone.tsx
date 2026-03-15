@@ -62,7 +62,7 @@ export function FileDropZone({
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors ${
+      className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors focus-within:ring-2 focus-within:ring-zinc-400 dark:focus-within:ring-zinc-500 focus-within:ring-offset-2 ${
         dragActive
           ? "border-zinc-400 dark:border-zinc-500 bg-zinc-50 dark:bg-zinc-800/50"
           : "border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500"

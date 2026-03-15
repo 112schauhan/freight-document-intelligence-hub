@@ -78,21 +78,24 @@ export default function DocumentsPage() {
     setError(null);
   }, []);
 
+  const inputFocusClass =
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2";
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           Documents
         </h1>
         <Link
           href="/upload"
-          className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity"
+          className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 shrink-0"
         >
           Upload document
         </Link>
       </div>
 
-      <div className="mb-6 space-y-4 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50/50 dark:bg-zinc-800/30">
+      <div className="space-y-4 rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 sm:p-6 bg-zinc-50/50 dark:bg-zinc-800/30">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="sm:col-span-2">
             <label htmlFor="search" className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
@@ -107,7 +110,7 @@ export default function DocumentsPage() {
                 onFilterChange();
               }}
               placeholder="Type to search…"
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+              className={`w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm ${inputFocusClass}`}
             />
           </div>
           <div>
@@ -121,7 +124,7 @@ export default function DocumentsPage() {
                 setDocumentType(e.target.value);
                 onFilterChange();
               }}
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+              className={`w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm ${inputFocusClass}`}
             >
               {DOCUMENT_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value || "all"} value={opt.value}>
@@ -142,7 +145,7 @@ export default function DocumentsPage() {
                 setDateFrom(e.target.value);
                 onFilterChange();
               }}
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+              className={`w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm ${inputFocusClass}`}
             />
           </div>
           <div>
@@ -157,7 +160,7 @@ export default function DocumentsPage() {
                 setDateTo(e.target.value);
                 onFilterChange();
               }}
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+              className={`w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm ${inputFocusClass}`}
             />
           </div>
         </div>
@@ -174,7 +177,7 @@ export default function DocumentsPage() {
               onFilterChange();
             }}
             placeholder="e.g. China, India"
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+            className={`w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm ${inputFocusClass}`}
           />
         </div>
       </div>
@@ -207,7 +210,7 @@ export default function DocumentsPage() {
       )}
 
       {!loading && !error && documents.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-700 min-w-0" role="region" aria-label="Documents table">
           <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
             <thead className="bg-zinc-50 dark:bg-zinc-800/50">
               <tr>
@@ -237,13 +240,13 @@ export default function DocumentsPage() {
                   <td className="px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
                     <Link
                       href={`/documents/${doc.id}`}
-                      className="font-medium text-zinc-900 dark:text-zinc-100 hover:underline"
+                      className="font-medium text-zinc-900 dark:text-zinc-100 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
                     >
                       {doc.documentType ?? "—"}
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
-                    <Link href={`/documents/${doc.id}`} className="hover:underline">
+                    <Link href={`/documents/${doc.id}`} className="hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded">
                       {doc.fileName}
                     </Link>
                   </td>

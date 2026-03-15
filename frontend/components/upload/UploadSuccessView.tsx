@@ -10,7 +10,7 @@ interface UploadSuccessViewProps {
 
 export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessViewProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-xl border border-zinc-200 dark:border-zinc-700 p-6 sm:p-8 bg-zinc-50/50 dark:bg-zinc-800/30">
       <p className="text-green-600 dark:text-green-400 font-medium">
         Upload successful. Extraction complete.
       </p>
@@ -52,17 +52,17 @@ export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessView
           </ul>
         </div>
       )}
-      <div className="flex gap-3 pt-2">
+      <div className="flex flex-wrap gap-3 pt-2">
         <Link
           href="/upload/review"
-          className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2.5 font-medium hover:opacity-90 transition-opacity inline-block"
+          className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2.5 font-medium hover:opacity-90 transition-opacity inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
         >
           Review and approve
         </Link>
         <button
           type="button"
           onClick={onUploadAnother}
-          className="rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+          className="rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
         >
           Upload another
         </button>
