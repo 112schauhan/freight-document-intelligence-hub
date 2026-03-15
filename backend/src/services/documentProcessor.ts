@@ -78,9 +78,19 @@ async function runExtractionPipeline(input: ProcessDocumentInput): Promise<{
     logInfo("Running pdf to text extraction")
     extractedText = await extractTextFromPdf(input.fileBuffer)
     if (!extractedText || extractedText.length < 100) {
-      logInfo("Triggering OCR pipeline for PDF")
+      logInfo("Triggering OCR pipeline for PDF (first 3 pages)")
       const images = await convertPdfToImages(input.fileBuffer)
-      extractedText = await runOCR(images)
+      try {
+        extractedText = await runOCR(images)
+      } finally {
+        for (const p of images) {
+          try {
+            await fs.promises.unlink(p)
+          } catch {
+            /* ignore */
+          }
+        }
+      }
     }
   }
 

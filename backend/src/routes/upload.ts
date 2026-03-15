@@ -39,6 +39,29 @@ function inferDocumentType(fileName: string, extraction: Record<string, string |
   return inferDocumentTypeFromExtraction(extraction) ?? inferDocumentTypeFromFileName(fileName)
 }
 
+/** Remove pending files older than 24h to avoid filling disk (e.g. on hosted/ephemeral backends). */
+const PENDING_STALE_MS = 24 * 60 * 60 * 1000
+
+async function cleanupStalePendingFiles(pendingDir: string): Promise<void> {
+  try {
+    if (!fs.existsSync(pendingDir)) return
+    const entries = await fs.promises.readdir(pendingDir, { withFileTypes: true })
+    const now = Date.now()
+    for (const e of entries) {
+      if (!e.isFile()) continue
+      const full = path.join(pendingDir, e.name)
+      try {
+        const stat = await fs.promises.stat(full)
+        if (now - stat.mtimeMs > PENDING_STALE_MS) await fs.promises.unlink(full)
+      } catch {
+        /* ignore per-file errors */
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 export default async function uploadRoutes(fastify: FastifyInstance) {
   fastify.post("/upload", async (request, reply) => {
     try {
@@ -67,6 +90,7 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
         ? env.PENDING_UPLOAD_DIR
         : path.join(process.cwd(), env.PENDING_UPLOAD_DIR)
       await fs.promises.mkdir(pendingDir, { recursive: true })
+      await cleanupStalePendingFiles(pendingDir)
       const filePath = path.join(pendingDir, `${uploadId}${ext}`)
 
       await pipeline(file.file, fs.createWriteStream(filePath))
