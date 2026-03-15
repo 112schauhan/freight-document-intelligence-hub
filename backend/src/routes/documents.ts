@@ -6,8 +6,10 @@ import { env } from "../config/env"
 import { logError } from "../utils/logger"
 import {
   createDocumentWithFieldsAndCorrections,
+  findDocumentsWithFilters,
   type FieldValues,
 } from "../repositories/documentRepository"
+import type { DocumentField } from "@prisma/client"
 import { prisma } from "../db/prisma"
 
 const DEMO_ORG_ID = "demo-org-1"
@@ -42,7 +44,50 @@ function findPendingFilePath(uploadId: string): string | null {
   return found ? path.join(pendingDir, found) : null
 }
 
+function getFieldDisplayValue(fields: DocumentField[], fieldName: string): string | null {
+  const f = fields.find((x) => x.fieldName === fieldName)
+  if (!f) return null
+  return (f.correctedValue ?? f.aiValue) ?? null
+}
+
+interface ListQuery {
+  q?: string
+  documentType?: string
+  dateFrom?: string
+  dateTo?: string
+  countryOfOrigin?: string
+}
+
 export default async function documentsRoutes(fastify: FastifyInstance) {
+  fastify.get<{ Querystring: ListQuery }>("/documents", async (request, reply) => {
+    try {
+      const { q, documentType, dateFrom, dateTo, countryOfOrigin } = request.query
+      const filters: Parameters<typeof findDocumentsWithFilters>[0] = {
+        orgId: DEMO_ORG_ID,
+      }
+      if (q !== undefined) filters.q = q
+      if (documentType !== undefined) filters.documentType = documentType
+      if (dateFrom !== undefined) filters.dateFrom = dateFrom
+      if (dateTo !== undefined) filters.dateTo = dateTo
+      if (countryOfOrigin !== undefined) filters.countryOfOrigin = countryOfOrigin
+      const documents = await findDocumentsWithFilters(filters)
+      const list = documents.map((doc) => ({
+        id: doc.id,
+        fileName: doc.fileName,
+        documentType: doc.documentType,
+        uploadTimestamp: doc.uploadTimestamp.toISOString(),
+        shipper: getFieldDisplayValue(doc.fields, "shipper_name"),
+        consignee: getFieldDisplayValue(doc.fields, "consignee_name"),
+        commodityDescription: getFieldDisplayValue(doc.fields, "commodity_description"),
+        referenceNumber: getFieldDisplayValue(doc.fields, "reference_number"),
+      }))
+      return reply.send({ documents: list })
+    } catch (error) {
+      logError("List documents failed", error)
+      return reply.status(500).send({ error: "Failed to list documents" })
+    }
+  })
+
   fastify.post<{ Body: ApproveBody }>("/documents/approve", async (request, reply) => {
     try {
       const body = request.body

@@ -1,4 +1,21 @@
+import type { Prisma } from "@prisma/client"
 import { prisma } from "../db/prisma"
+
+export interface ListDocumentsFilters {
+  orgId: string
+  q?: string
+  documentType?: string
+  dateFrom?: string
+  dateTo?: string
+  countryOfOrigin?: string
+}
+
+const SEARCH_FIELD_NAMES = [
+  "shipper_name",
+  "consignee_name",
+  "commodity_description",
+  "reference_number",
+] as const
 
 export interface DocumentMeta {
   fileName: string
@@ -69,6 +86,60 @@ export async function createDocumentWithFieldsAndCorrections(
       })
     }
     return { documentId }
+  })
+}
+
+/**
+ * Build Prisma where clause for document list with optional search and filters.
+ */
+function buildListWhere(filters: ListDocumentsFilters): Prisma.DocumentWhereInput {
+  const conditions: Prisma.DocumentWhereInput[] = [{ orgId: filters.orgId }]
+
+  if (filters.documentType) {
+    conditions.push({ documentType: { equals: filters.documentType, mode: "insensitive" } })
+  }
+  if (filters.dateFrom) {
+    conditions.push({ uploadTimestamp: { gte: new Date(filters.dateFrom) } })
+  }
+  if (filters.dateTo) {
+    conditions.push({ uploadTimestamp: { lte: new Date(filters.dateTo) } })
+  }
+  if (filters.countryOfOrigin) {
+    conditions.push({
+      fields: {
+        some: {
+          fieldName: "country_of_origin",
+          OR: [
+            { correctedValue: { equals: filters.countryOfOrigin, mode: "insensitive" } },
+            { aiValue: { equals: filters.countryOfOrigin, mode: "insensitive" } },
+          ],
+        },
+      },
+    })
+  }
+  if (filters.q && filters.q.trim()) {
+    const q = filters.q.trim()
+    conditions.push({
+      fields: {
+        some: {
+          fieldName: { in: [...SEARCH_FIELD_NAMES] },
+          OR: [
+            { correctedValue: { contains: q, mode: "insensitive" } },
+            { aiValue: { contains: q, mode: "insensitive" } },
+          ],
+        },
+      },
+    })
+  }
+
+  return { AND: conditions }
+}
+
+export async function findDocumentsWithFilters(filters: ListDocumentsFilters) {
+  return prisma.document.findMany({
+    where: buildListWhere(filters),
+    orderBy: { uploadTimestamp: "desc" },
+    include: { fields: true },
   })
 }
 
