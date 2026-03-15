@@ -8,7 +8,7 @@ import { randomUUID } from "crypto"
 import { env } from "../config/env"
 
 /** Infer document type from filename (e.g. commercial invoice, packing list, bill of lading). */
-function inferDocumentType(fileName: string): string | null {
+function inferDocumentTypeFromFileName(fileName: string): string | null {
   const lower = fileName.toLowerCase()
   const hasInvoice = lower.includes("invoice")
   const hasPacking = lower.includes("packing")
@@ -19,6 +19,24 @@ function inferDocumentType(fileName: string): string | null {
   if (hasInvoice) return "commercial_invoice"
   if (hasPacking) return "packing_list"
   return null
+}
+
+/** Infer document type from extracted text (e.g. commodity or other fields mention doc type). */
+function inferDocumentTypeFromExtraction(extraction: Record<string, string | null> | null): string | null {
+  if (!extraction || typeof extraction !== "object") return null
+  const combined = Object.values(extraction)
+    .filter((v): v is string => v != null && v.length > 0)
+    .join(" ")
+    .toLowerCase()
+  if (combined.includes("bill of lading") || combined.includes("b/l")) return "bill_of_lading"
+  if (combined.includes("packing list") && combined.includes("invoice")) return "commercial_invoice_packing_list"
+  if (combined.includes("commercial invoice") || combined.includes("invoice")) return "commercial_invoice"
+  if (combined.includes("packing list")) return "packing_list"
+  return null
+}
+
+function inferDocumentType(fileName: string, extraction: Record<string, string | null> | null): string | null {
+  return inferDocumentTypeFromExtraction(extraction) ?? inferDocumentTypeFromFileName(fileName)
 }
 
 export default async function uploadRoutes(fastify: FastifyInstance) {
@@ -61,7 +79,7 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
         filePath,
       })
 
-      const documentType = inferDocumentType(file.filename)
+      const documentType = inferDocumentType(file.filename, result.structuredData ?? null)
 
       return reply.send({
         uploadId,
