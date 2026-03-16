@@ -10,6 +10,7 @@ import type {
   DocumentSortOrder,
 } from "@/lib/api"
 import { documentsToCsv, downloadCsv } from "@/lib/csvExport"
+import { DatePicker } from "@/components/ui/DatePicker"
 
 const DEBOUNCE_MS = 300
 
@@ -212,15 +213,16 @@ export default function DocumentsPage() {
             >
               Date from
             </label>
-            <input
+            <DatePicker
               id="dateFrom"
-              type="date"
               value={dateFrom}
-              onChange={(e) => {
-                setDateFrom(e.target.value)
+              onChange={(v) => {
+                setDateFrom(v)
                 onFilterChange()
               }}
-              className={`w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm ${inputFocusClass}`}
+              placeholder="From"
+              max={dateTo || undefined}
+              aria-label="Filter from date"
             />
           </div>
           <div>
@@ -230,15 +232,16 @@ export default function DocumentsPage() {
             >
               Date to
             </label>
-            <input
+            <DatePicker
               id="dateTo"
-              type="date"
               value={dateTo}
-              onChange={(e) => {
-                setDateTo(e.target.value)
+              onChange={(v) => {
+                setDateTo(v)
                 onFilterChange()
               }}
-              className={`w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm ${inputFocusClass}`}
+              placeholder="To"
+              min={dateFrom || undefined}
+              aria-label="Filter to date"
             />
           </div>
         </div>

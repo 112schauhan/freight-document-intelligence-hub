@@ -27,3 +27,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Date picker (react-day-picker) – zinc accents, no blue in dark mode */
+.date-picker-popover .rdp-root {
+  --rdp-accent-color: #3f3f46;
+  --rdp-accent-background-color: #e4e4e7;
+  --rdp-today-color: #52525b;
+}
+@media (prefers-color-scheme: dark) {
+  .date-picker-popover .rdp-root {
+    --rdp-accent-color: #d4d4d8;
+    --rdp-accent-background-color: #52525b;
+    --rdp-today-color: #a1a1aa;
+  }
+}
