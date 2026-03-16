@@ -38,7 +38,11 @@ export interface DocumentListItem {
 
 export interface DocumentsListResponse {
   documents: DocumentListItem[]
+  total: number
 }
+
+export type DocumentSortBy = "uploadTimestamp" | "documentType" | "fileName"
+export type DocumentSortOrder = "asc" | "desc"
 
 export interface DocumentField {
   fieldName: string
@@ -69,6 +73,10 @@ export interface ListDocumentsParams {
   dateFrom?: string
   dateTo?: string
   countryOfOrigin?: string
+  limit?: number
+  offset?: number
+  sortBy?: DocumentSortBy
+  sortOrder?: DocumentSortOrder
 }
 
 /** POST /upload — upload file for extraction (no DB write). */
@@ -113,7 +121,7 @@ export async function approveDocument(body: {
   return res.json() as Promise<ApproveResponse>
 }
 
-/** GET /documents — list documents with optional search/filters. */
+/** GET /documents — list documents with optional search/filters, pagination, and sort. */
 export async function getDocuments(params?: ListDocumentsParams): Promise<DocumentsListResponse> {
   const base = getBaseUrl()
   const search = new URLSearchParams()
@@ -122,6 +130,10 @@ export async function getDocuments(params?: ListDocumentsParams): Promise<Docume
   if (params?.dateFrom) search.set("dateFrom", params.dateFrom)
   if (params?.dateTo) search.set("dateTo", params.dateTo)
   if (params?.countryOfOrigin) search.set("countryOfOrigin", params.countryOfOrigin)
+  if (params?.limit != null) search.set("limit", String(params.limit))
+  if (params?.offset != null) search.set("offset", String(params.offset))
+  if (params?.sortBy) search.set("sortBy", params.sortBy)
+  if (params?.sortOrder) search.set("sortOrder", params.sortOrder)
   const qs = search.toString()
   const url = qs ? `${base}/documents?${qs}` : `${base}/documents`
   const res = await fetch(url)

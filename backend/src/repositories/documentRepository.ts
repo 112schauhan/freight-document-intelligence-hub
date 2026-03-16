@@ -1,6 +1,9 @@
 import type { Prisma } from "@prisma/client"
 import { prisma } from "../db/prisma"
 
+export type DocumentSortBy = "uploadTimestamp" | "documentType" | "fileName"
+export type DocumentSortOrder = "asc" | "desc"
+
 export interface ListDocumentsFilters {
   orgId: string
   q?: string
@@ -8,6 +11,10 @@ export interface ListDocumentsFilters {
   dateFrom?: string
   dateTo?: string
   countryOfOrigin?: string
+  limit?: number
+  offset?: number
+  sortBy?: DocumentSortBy
+  sortOrder?: DocumentSortOrder
 }
 
 const SEARCH_FIELD_NAMES = [
@@ -138,12 +145,32 @@ function buildListWhere(filters: ListDocumentsFilters): Prisma.DocumentWhereInpu
   return { AND: conditions }
 }
 
+function buildListOrderBy(
+  sortBy: DocumentSortBy = "uploadTimestamp",
+  sortOrder: DocumentSortOrder = "desc",
+): Prisma.DocumentOrderByWithRelationInput {
+  return { [sortBy]: sortOrder }
+}
+
 export async function findDocumentsWithFilters(filters: ListDocumentsFilters) {
-  return prisma.document.findMany({
-    where: buildListWhere(filters),
-    orderBy: { uploadTimestamp: "desc" },
-    include: { fields: true },
-  })
+  const where = buildListWhere(filters)
+  const sortBy = filters.sortBy ?? "uploadTimestamp"
+  const sortOrder = filters.sortOrder ?? "desc"
+  const orderBy = buildListOrderBy(sortBy, sortOrder)
+  const limit = Math.min(Math.max(1, filters.limit ?? 25), 100)
+  const offset = Math.max(0, filters.offset ?? 0)
+
+  const [documents, total] = await Promise.all([
+    prisma.document.findMany({
+      where,
+      orderBy,
+      take: limit,
+      skip: offset,
+      include: { fields: true },
+    }),
+    prisma.document.count({ where }),
+  ])
+  return { documents, total }
 }
 
 export async function findDocumentById(id: string) {

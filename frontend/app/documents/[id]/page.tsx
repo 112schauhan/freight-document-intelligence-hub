@@ -89,7 +89,7 @@ export default function DocumentDetailPage({
         <p className="text-zinc-600 dark:text-zinc-400">Loading document…</p>
         <Link
           href="/documents"
-          className="inline-block text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
+          className="cursor-pointer inline-block text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
         >
           Back to documents
         </Link>
@@ -105,7 +105,7 @@ export default function DocumentDetailPage({
         </p>
         <Link
           href="/documents"
-          className="inline-block text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
+          className="cursor-pointer inline-block text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
         >
           Back to documents
         </Link>
@@ -123,7 +123,7 @@ export default function DocumentDetailPage({
         </h1>
         <Link
           href="/documents"
-          className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded shrink-0"
+          className="cursor-pointer text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded shrink-0"
         >
           Back to documents
         </Link>
@@ -159,6 +159,17 @@ export default function DocumentDetailPage({
         <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
           Extracted fields
         </h2>
+        {(doc.fields.length === 0 ||
+          doc.fields.every(
+            (f) =>
+              !(f.correctedValue ?? f.aiValue) ||
+              String(f.correctedValue ?? f.aiValue).trim() === ""
+          )) ? (
+          <p className="text-sm text-amber-700 dark:text-amber-300">
+            This document was added with no extracted data (manual entry).
+            {doc.fields.length === 0 ? " No fields were stored." : " All fields are empty."}
+          </p>
+        ) : null}
         <dl className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4 text-sm">
           {doc.fields.map((field) => {
             const value = displayValue(field)
@@ -229,7 +240,7 @@ export default function DocumentDetailPage({
           href={fileUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
+          className="cursor-pointer inline-flex items-center rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
         >
           View / Download original file
         </a>

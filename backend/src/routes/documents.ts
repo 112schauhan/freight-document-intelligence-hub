@@ -69,12 +69,16 @@ interface ListQuery {
   dateFrom?: string
   dateTo?: string
   countryOfOrigin?: string
+  limit?: string
+  offset?: string
+  sortBy?: string
+  sortOrder?: string
 }
 
 export default async function documentsRoutes(fastify: FastifyInstance) {
   fastify.get<{ Querystring: ListQuery }>("/documents", async (request, reply) => {
     try {
-      const { q, documentType, dateFrom, dateTo, countryOfOrigin } = request.query
+      const { q, documentType, dateFrom, dateTo, countryOfOrigin, limit, offset, sortBy, sortOrder } = request.query
       const filters: Parameters<typeof findDocumentsWithFilters>[0] = {
         orgId: DEMO_ORG_ID,
       }
@@ -83,7 +87,20 @@ export default async function documentsRoutes(fastify: FastifyInstance) {
       if (dateFrom !== undefined) filters.dateFrom = dateFrom
       if (dateTo !== undefined) filters.dateTo = dateTo
       if (countryOfOrigin !== undefined) filters.countryOfOrigin = countryOfOrigin
-      const documents = await findDocumentsWithFilters(filters)
+      if (limit !== undefined) {
+        const n = parseInt(limit, 10)
+        if (!Number.isNaN(n)) filters.limit = n
+      }
+      if (offset !== undefined) {
+        const n = parseInt(offset, 10)
+        if (!Number.isNaN(n)) filters.offset = n
+      }
+      const validSortBy = ["uploadTimestamp", "documentType", "fileName"] as const
+      if (sortBy !== undefined && validSortBy.includes(sortBy as typeof validSortBy[number])) {
+        filters.sortBy = sortBy as typeof validSortBy[number]
+      }
+      if (sortOrder === "asc" || sortOrder === "desc") filters.sortOrder = sortOrder
+      const { documents, total } = await findDocumentsWithFilters(filters)
       const list = documents.map((doc) => ({
         id: doc.id,
         fileName: doc.fileName,
@@ -94,7 +111,7 @@ export default async function documentsRoutes(fastify: FastifyInstance) {
         commodityDescription: getFieldDisplayValue(doc.fields, "commodity_description"),
         referenceNumber: getFieldDisplayValue(doc.fields, "reference_number"),
       }))
-      return reply.send({ documents: list })
+      return reply.send({ documents: list, total })
     } catch (error) {
       logError("List documents failed", error)
       return reply.status(500).send({ error: "Failed to list documents" })
