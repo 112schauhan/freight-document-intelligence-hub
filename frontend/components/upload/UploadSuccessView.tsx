@@ -21,7 +21,7 @@ export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessView
           </p>
           <Link
             href={`/documents/${result.duplicateOf.id}`}
-            className="inline-block mt-2 text-sm font-medium text-amber-800 dark:text-amber-200 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded"
+            className="cursor-pointer inline-block mt-2 text-sm font-medium text-amber-800 dark:text-amber-200 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded"
           >
             View existing document →
           </Link>
@@ -33,6 +33,16 @@ export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessView
         <p className="text-green-600 dark:text-green-400 font-medium">
           Upload successful. Extraction complete.
         </p>
+      )}
+      {!result.duplicateOf && (result.extraction === null || Object.keys(result.extraction || {}).length === 0) && (
+        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
+          <p className="text-amber-800 dark:text-amber-200 font-medium">
+            We couldn’t extract data automatically from this document.
+          </p>
+          <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+            You can enter the details manually on the Review page before approving.
+          </p>
+        </div>
       )}
       <dl className="grid gap-2 text-sm">
         <div>
@@ -57,6 +67,16 @@ export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessView
           <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
             Extracted data (preview)
           </h2>
+          {(() => {
+            const nullCount = Object.values(result.extraction!).filter(
+              (v) => v == null || String(v).trim() === ""
+            ).length
+            return nullCount > 0 ? (
+              <p className="text-sm text-amber-700 dark:text-amber-300 mb-2">
+                {nullCount} {nullCount === 1 ? "field" : "fields"} could not be extracted. You can fill them in on the Review page.
+              </p>
+            ) : null
+          })()}
           <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
             {Object.entries(result.extraction).slice(0, 6).map(([key, value]) => (
               <li key={key}>
@@ -75,14 +95,14 @@ export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessView
       <div className="flex flex-wrap gap-3 pt-2">
         <Link
           href="/upload/review"
-          className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2.5 font-medium hover:opacity-90 transition-opacity inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
+          className="cursor-pointer rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2.5 font-medium hover:opacity-90 transition-opacity inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
         >
           Review and approve
         </Link>
         <button
           type="button"
           onClick={onUploadAnother}
-          className="rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
+          className="cursor-pointer rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
         >
           Upload another
         </button>

@@ -105,7 +105,7 @@ export default function UploadReviewPage() {
             No upload result found. Please{" "}
             <Link
               href="/upload"
-              className="text-zinc-900 dark:text-zinc-100 underline font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
+              className="cursor-pointer text-zinc-900 dark:text-zinc-100 underline font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
             >
               upload a document
             </Link>{" "}
@@ -114,7 +114,7 @@ export default function UploadReviewPage() {
         </div>
         <Link
           href="/upload"
-          className="inline-block text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
+          className="cursor-pointer inline-block text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2 rounded"
         >
           Back to upload
         </Link>
@@ -134,13 +134,30 @@ export default function UploadReviewPage() {
       </div>
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-6 sm:p-8 bg-zinc-50/50 dark:bg-zinc-800/30">
+        {upload.extraction === null || Object.keys(upload.extraction || {}).length === 0 ? (
+          <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
+            No data was extracted from this document. Enter all fields manually below.
+          </p>
+        ) : (() => {
+          const nullCount = EXTRACTION_FIELDS.filter(
+            (key) => {
+              const v = upload.extraction![key]
+              return v == null || String(v).trim() === ""
+            }
+          ).length
+          return nullCount > 0 ? (
+            <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
+              {nullCount} of {EXTRACTION_FIELDS.length} fields could not be extracted. Fill in the blanks below as needed.
+            </p>
+          ) : null
+        })()}
         {error && (
           <div className="mb-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
             <p className="text-red-800 dark:text-red-200">{error}</p>
             {duplicateDocumentId && (
               <Link
                 href={`/documents/${duplicateDocumentId}`}
-                className="inline-block mt-2 text-sm font-medium text-red-800 dark:text-red-200 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
+                className="cursor-pointer inline-block mt-2 text-sm font-medium text-red-800 dark:text-red-200 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
               >
                 View existing document →
               </Link>
