@@ -23,9 +23,11 @@ To run the backend in Docker (Poppler included): from `backend/`, `docker compos
 - **OCR pipeline:** PDFs use `pdftotext` first; if too little text is found, pages are converted via `pdftoppm` and sent to Tesseract. Images (PNG/JPEG) go directly to Tesseract.
 - **Data model:** Organizations (with `org_id`) → Documents (file reference, upload timestamp, document type) → DocumentFields (`aiValue`, `correctedValue`) and CorrectionHistory. This supports the audit trail and multi-tenant context.
 
-## Bonus feature: Export to CSV
+## Bonus features
 
-The Documents dashboard has an **Export CSV** button that downloads the current filtered list as a CSV. Logistics and customs teams often need to share document summaries in spreadsheets or feed them into other systems; this avoids manual copy-paste and respects the active search and filters.
+**Export to CSV:** The Documents dashboard has an **Export CSV** button that downloads the current filtered list as a CSV. Logistics and customs teams often need to share document summaries in spreadsheets or feed them into other systems; this avoids manual copy-paste and respects the active search and filters.
+
+**Duplicate document detection:** Uploads are fingerprinted by content (SHA-256 of normalized extracted text). If the same document is uploaded again, the app detects it: the upload response includes a `duplicateOf` reference to the existing document, the UI shows a warning and a link to view it, and the approve endpoint returns 409 Conflict so a second copy is not saved. This keeps the document list free of duplicates and avoids double-counting in exports.
 
 ## Tradeoffs
 
