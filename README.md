@@ -2,6 +2,35 @@
 
 A web application where users upload logistics documents (commercial invoice, packing list, or bill of lading). AI extracts structured data; results are shown in an editable form for human-in-the-loop review, then stored and made searchable in a dashboard.
 
+## Features
+
+### Document upload and AI extraction
+
+- **Upload:** PDF or image (PNG, JPEG) of a logistics document. File is processed on the server (OCR + Claude extraction). Supported document types: commercial invoice, packing list, bill of lading (inferred from filename or content).
+- **Extracted fields:** Shipper name and address, consignee name and address, commodity description, quantity and unit, gross and net weight, country of origin, invoice value and currency, Incoterms (if present), document date, reference number.
+- **Review and approve:** After upload, extraction results are shown in an editable form. User can correct any field before saving. Only on “Approve” is the document stored in the database (two-phase flow). If extraction fails or is partial, the UI shows clear messages (“We couldn’t extract data automatically…”, “X fields could not be extracted”) so the user can fill in manually.
+- **Duplicate detection:** Uploads are fingerprinted by content. If the same document is already stored, the app shows a duplicate warning and link to the existing document; approve returns 409 so a second copy is not saved.
+
+### Dashboard and document list
+
+- **List:** All processed documents in a table (document type, file name, upload date, shipper, consignee, reference). Each row links to the document detail page.
+- **Search:** Full-text search on shipper, consignee, commodity description, and reference number (debounced).
+- **Filters:** Document type (dropdown), date range (from/to), country of origin. Date filters use a calendar date picker (react-day-picker) with light/dark theme.
+- **Sort:** Sort by upload date (newest or oldest), document type (A–Z / Z–A), or file name (A–Z / Z–A).
+- **Pagination:** Page size 10, 25, or 50; Previous/Next; “Page X of Y” and total count. Export CSV exports the current page (respects filters and pagination).
+
+### Document detail
+
+- **Metadata:** File name, document type, upload date.
+- **Extracted fields:** All fields with display value (corrected value if set, else AI value). Fields that were user-corrected show “(corrected)” and the original AI value. If the document was added with no extracted data (manual entry), a short message is shown.
+- **Correction history:** List of fields that were corrected, with previous AI value, corrected value, and timestamp.
+- **Original file:** Link to view or download the uploaded PDF/image.
+
+### Bonus features
+
+- **Export to CSV:** Download the current document list (current page) as CSV (document type, file name, upload date, shipper, consignee, commodity description, reference number, document ID). Respects active search and filters.
+- **Duplicate document detection:** Content fingerprint (SHA-256); duplicate warning at upload and 409 on approve with link to existing document.
+
 ## Setup instructions
 
 **Prerequisites:** Node.js (v18+), PostgreSQL, Poppler on PATH (`pdftotext`, `pdftoppm`).
@@ -21,13 +50,7 @@ To run the backend in Docker (Poppler included): from `backend/`, `docker compos
 - **Two-phase upload and human-in-the-loop:** Upload runs OCR and Claude extraction and returns extraction results; the document is not saved until the user reviews the editable form and clicks Approve. Approve moves the file from pending to final storage and creates the document, fields, and correction history.
 - **Structured extraction and storage:** Extracted text is sent to Claude; structured fields are returned and stored relationally (per-field rows), not as a JSON blob. Only changed fields are sent as `correctedFields` and written to a correction-history table for an audit trail.
 - **OCR pipeline:** PDFs use `pdftotext` first; if too little text is found, pages are converted via `pdftoppm` and sent to Tesseract. Images (PNG/JPEG) go directly to Tesseract.
-- **Data model:** Organizations (with `org_id`) → Documents (file reference, upload timestamp, document type) → DocumentFields (`aiValue`, `correctedValue`) and CorrectionHistory. This supports the audit trail and multi-tenant context.
-
-## Bonus features
-
-**Export to CSV:** The Documents dashboard has an **Export CSV** button that downloads the current filtered list as a CSV. Logistics and customs teams often need to share document summaries in spreadsheets or feed them into other systems; this avoids manual copy-paste and respects the active search and filters.
-
-**Duplicate document detection:** Uploads are fingerprinted by content (SHA-256 of normalized extracted text). If the same document is uploaded again, the app detects it: the upload response includes a `duplicateOf` reference to the existing document, the UI shows a warning and a link to view it, and the approve endpoint returns 409 Conflict so a second copy is not saved. This keeps the document list free of duplicates and avoids double-counting in exports.
+- **Data model:** Organizations (with `org_id`) → Documents (file reference, upload timestamp, document type) → DocumentFields (`aiValue`, `correctedValue`) and CorrectionHistory. Indexes on `Document` (orgId + uploadTimestamp, orgId + fingerprint) support list queries and duplicate lookup. Multi-tenant ready via `org_id`.
 
 ## Tradeoffs
 
