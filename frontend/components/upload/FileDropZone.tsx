@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useState, useCallback } from "react";
-import { ACCEPT, MAX_SIZE_MB, validateFile } from "./constants";
+import { useRef, useState, useCallback } from "react"
+import { ACCEPT, MAX_SIZE_MB, validateFile } from "./constants"
 
 interface FileDropZoneProps {
   file: File | null;
@@ -16,7 +16,8 @@ export function FileDropZone({
   onValidationError,
   disabled = false,
 }: FileDropZoneProps) {
-  const [dragActive, setDragActive] = useState(false);
+  const [dragActive, setDragActive] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback(
     (f: File | null) => {
@@ -37,9 +38,14 @@ export function FileDropZone({
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    handleFile(f ?? null);
-  };
+    const f = e.target.files?.[0]
+    handleFile(f ?? null)
+  }
+
+  const handleRemove = useCallback(() => {
+    handleFile(null)
+    if (inputRef.current) inputRef.current.value = ""
+  }, [handleFile])
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -69,6 +75,7 @@ export function FileDropZone({
       } ${disabled ? "opacity-60 pointer-events-none" : ""}`}
     >
       <input
+        ref={inputRef}
         type="file"
         accept={ACCEPT}
         onChange={handleInputChange}
@@ -87,6 +94,16 @@ export function FileDropZone({
           or drag and drop here (PDF, PNG, JPEG, max {MAX_SIZE_MB}MB)
         </span>
       </label>
+      {file && (
+        <button
+          type="button"
+          onClick={handleRemove}
+          className="mt-4 inline-flex items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 focus-visible:ring-offset-2"
+          disabled={disabled}
+        >
+          Remove file
+        </button>
+      )}
     </div>
   );
 }
