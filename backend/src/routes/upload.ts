@@ -113,13 +113,24 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
           ? await findDocumentByFingerprint(DEMO_ORG_ID, result.fingerprint)
           : null
 
+      if (duplicateOf) {
+        try {
+          await fs.promises.unlink(filePath)
+        } catch {
+          /* ignore */
+        }
+        return reply.status(409).send({
+          error: "Duplicate document",
+          duplicateOf: { id: duplicateOf.id, fileName: duplicateOf.fileName },
+        })
+      }
+
       return reply.send({
         uploadId,
         fileName: file.filename,
         documentType,
         extraction: result.structuredData ?? null,
         fingerprint: result.fingerprint ?? undefined,
-        ...(duplicateOf && { duplicateOf: { id: duplicateOf.id, fileName: duplicateOf.fileName } }),
       })
     } catch (error) {
       logError("Upload processing failed", error)

@@ -17,8 +17,17 @@ export interface UploadResponse {
   documentType: string | null
   extraction: FieldValues | null
   fingerprint?: string
-  /** Set when this upload matches an existing document by content fingerprint. */
-  duplicateOf?: { id: string; fileName: string }
+}
+
+/** Thrown when upload is rejected because the document is a duplicate (409). */
+export class DuplicateDocumentError extends Error {
+  constructor(
+    message: string,
+    public readonly duplicateOf: { id: string; fileName: string },
+  ) {
+    super(message)
+    this.name = "DuplicateDocumentError"
+  }
 }
 
 export interface ApproveResponse {
@@ -79,7 +88,7 @@ export interface ListDocumentsParams {
   sortOrder?: DocumentSortOrder
 }
 
-/** POST /upload — upload file for extraction (no DB write). */
+/** POST /upload — upload file for extraction (no DB write). Rejects with DuplicateDocumentError on 409. */
 export async function uploadFile(file: File): Promise<UploadResponse> {
   const base = getBaseUrl()
   const form = new FormData()
@@ -88,11 +97,14 @@ export async function uploadFile(file: File): Promise<UploadResponse> {
     method: "POST",
     body: form,
   })
+  const body = await res.json().catch(() => ({})) as { error?: string; duplicateOf?: { id: string; fileName: string } }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error((err as { error?: string }).error ?? `Upload failed: ${res.status}`)
+    if (res.status === 409 && body.duplicateOf) {
+      throw new DuplicateDocumentError(body.error ?? "Duplicate document", body.duplicateOf)
+    }
+    throw new Error(body.error ?? `Upload failed: ${res.status}`)
   }
-  return res.json() as Promise<UploadResponse>
+  return body as UploadResponse
 }
 
 /** POST /documents/approve — save document and corrections. */

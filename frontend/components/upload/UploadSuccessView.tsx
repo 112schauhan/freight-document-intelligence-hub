@@ -1,58 +1,47 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import type { UploadResponse } from "@/lib/api";
+import type { UploadResponse } from "@/lib/api"
+import Link from "next/link"
 
 interface UploadSuccessViewProps {
-  result: UploadResponse;
-  onUploadAnother: () => void;
+  result: UploadResponse
+  onUploadAnother: () => void
 }
 
-export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessViewProps) {
+export function UploadSuccessView({
+  result,
+  onUploadAnother,
+}: UploadSuccessViewProps) {
   return (
     <div className="space-y-6 rounded-xl border border-zinc-200 dark:border-zinc-700 p-6 sm:p-8 bg-zinc-50/50 dark:bg-zinc-800/30">
-      {result.duplicateOf ? (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">
-            This document appears to be a duplicate of one already in the system.
-          </p>
-          <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-            Existing: {result.duplicateOf.fileName}
-          </p>
-          <Link
-            href={`/documents/${result.duplicateOf.id}`}
-            className="cursor-pointer inline-block mt-2 text-sm font-medium text-amber-800 dark:text-amber-200 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded"
-          >
-            View existing document →
-          </Link>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
-            If you approve below, it will be rejected as a duplicate.
-          </p>
-        </div>
-      ) : (
-        <p className="text-green-600 dark:text-green-400 font-medium">
-          Upload successful. Extraction complete.
-        </p>
-      )}
-      {!result.duplicateOf && (result.extraction === null || Object.keys(result.extraction || {}).length === 0) && (
+      <p className="text-green-600 dark:text-green-400 font-medium">
+        Upload successful. Extraction complete.
+      </p>
+      {(result.extraction === null ||
+        Object.keys(result.extraction || {}).length === 0) && (
         <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
           <p className="text-amber-800 dark:text-amber-200 font-medium">
             We couldn’t extract data automatically from this document.
           </p>
           <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-            You can enter the details manually on the Review page before approving.
+            You can enter the details manually on the Review page before
+            approving.
           </p>
         </div>
       )}
       <dl className="grid gap-2 text-sm">
         <div>
           <dt className="text-zinc-500 dark:text-zinc-400">File</dt>
-          <dd className="text-zinc-900 dark:text-zinc-100">{result.fileName}</dd>
+          <dd className="text-zinc-900 dark:text-zinc-100">
+            {result.fileName}
+          </dd>
         </div>
         {result.documentType && (
           <div>
             <dt className="text-zinc-500 dark:text-zinc-400">Document type</dt>
-            <dd className="text-zinc-900 dark:text-zinc-100">{result.documentType}</dd>
+            <dd className="text-zinc-900 dark:text-zinc-100">
+              {result.documentType}
+            </dd>
           </div>
         )}
         <div>
@@ -69,21 +58,26 @@ export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessView
           </h2>
           {(() => {
             const nullCount = Object.values(result.extraction!).filter(
-              (v) => v == null || String(v).trim() === ""
+              (v) => v == null || String(v).trim() === "",
             ).length
             return nullCount > 0 ? (
               <p className="text-sm text-amber-700 dark:text-amber-300 mb-2">
-                {nullCount} {nullCount === 1 ? "field" : "fields"} could not be extracted. You can fill them in on the Review page.
+                {nullCount} {nullCount === 1 ? "field" : "fields"} could not be
+                extracted. You can fill them in on the Review page.
               </p>
             ) : null
           })()}
           <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
-            {Object.entries(result.extraction).slice(0, 6).map(([key, value]) => (
-              <li key={key}>
-                <span className="text-zinc-500 dark:text-zinc-500">{key}:</span>{" "}
-                {value ?? "—"}
-              </li>
-            ))}
+            {Object.entries(result.extraction)
+              .slice(0, 6)
+              .map(([key, value]) => (
+                <li key={key}>
+                  <span className="text-zinc-500 dark:text-zinc-500">
+                    {key}:
+                  </span>{" "}
+                  {value ?? "—"}
+                </li>
+              ))}
             {Object.keys(result.extraction).length > 6 && (
               <li className="text-zinc-500">
                 … and {Object.keys(result.extraction).length - 6} more fields
@@ -108,5 +102,5 @@ export function UploadSuccessView({ result, onUploadAnother }: UploadSuccessView
         </button>
       </div>
     </div>
-  );
+  )
 }
